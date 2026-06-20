@@ -101,11 +101,11 @@ The platform is layered into **clients → gateway → stateless API services �
 
 *Figure 1 — At its simplest: a user works in the **Web App**, which calls the **KnowledgeHub API** over REST (secured with JWT). The API uses three data stores — **PostgreSQL** as the system of record, **Elasticsearch** for fast full-text search, and **Redis** to cache hot results.*
 
-**Detailed system architecture**
+**Layered system architecture (presentation view)**
 
-![Detailed system architecture](docs/diagrams/01_architecture.png)
+![Layered system architecture](docs/diagrams/01b_architecture_presentation.png)
 
-*Figure 2 — Components, modules, and their interactions. The application tier is stateless and horizontally scaled; PostgreSQL is the system of record while Elasticsearch and Redis are independently scalable derived stores.*
+*Figure 2 — The same system in four clear layers, easy to narrate top-to-bottom: (1) users on the web/mobile app, (2) the gateway that secures and load-balances requests, (3) the stateless API and its four responsibilities, and (4) the three data stores, each doing one job — PostgreSQL (source of truth), Elasticsearch (fast search), and Redis (cache). A fully detailed component diagram (with the indexing pipeline, object storage and backups) is available at [`docs/diagrams/01_architecture.png`](docs/diagrams/01_architecture.png).*
 
 **Write path (create / update a document)**
 

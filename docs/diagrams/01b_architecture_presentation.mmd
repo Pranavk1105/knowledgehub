@@ -1,0 +1,40 @@
+flowchart TB
+    subgraph L1["1 · USERS"]
+        direction LR
+        WEB["💻 Web App"]
+        MOB["📱 Mobile App"]
+    end
+
+    GW["2 · API GATEWAY / LOAD BALANCER<br/><span style='font-size:13px'>HTTPS security · routing · spreads traffic across API copies</span>"]
+
+    subgraph L3["3 · KNOWLEDGEHUB API  (stateless — run many copies)"]
+        direction LR
+        AUTH["🔐 Auth<br/>login · permissions"]
+        DOCS["📄 Documents<br/>create · edit · versions"]
+        SEARCH["🔎 Search<br/>keyword search"]
+        COLLAB["💬 Collaboration<br/>comments · activity"]
+    end
+
+    subgraph L4["4 · DATA STORES  (each does one job)"]
+        direction LR
+        PG[("🗄️ PostgreSQL<br/><b>source of truth</b><br/>documents · versions<br/>permissions · logs")]
+        ES[("⚡ Elasticsearch<br/><b>fast search</b><br/>full-text index")]
+        RD[("🚀 Redis<br/><b>cache</b><br/>recent results")]
+    end
+
+    WEB --> GW
+    MOB --> GW
+    GW --> L3
+    L3 -->|"store &amp; read data"| PG
+    L3 -->|"index &amp; search text"| ES
+    L3 -->|"cache hot results"| RD
+
+    classDef layer fill:#f8fafc,stroke:#94a3b8,color:#0f172a;
+    classDef svc fill:#ccfbf1,stroke:#0f766e,color:#134e4a;
+    classDef store fill:#e0f2fe,stroke:#0369a1,color:#0c4a6e;
+    classDef user fill:#fef9c3,stroke:#a16207,color:#713f12;
+    classDef gw fill:#ffe4e6,stroke:#be123c,color:#881337;
+    class WEB,MOB user;
+    class AUTH,DOCS,SEARCH,COLLAB svc;
+    class PG,ES,RD store;
+    class GW gw;
