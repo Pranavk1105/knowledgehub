@@ -11,8 +11,9 @@ venv/
 notebooks/demo_nb.db
 notebooks/.ipynb_checkpoints/
 
-# Build intermediates (the final PDF IS committed; this is just the HTML step)
+# Build intermediates (the final PDFs ARE committed; these are just the HTML step)
 docs/_documentation_build.html
+docs/_build_*.html
 
 # Env
 .env

@@ -1,0 +1,21 @@
+flowchart LR
+    U["👤 User<br/>(browser)"]
+    UI["Web App<br/>(single-page UI)"]
+    API["KnowledgeHub API<br/>FastAPI backend"]
+
+    PG[("PostgreSQL<br/>documents · versions<br/>permissions · logs")]
+    ES[("Elasticsearch<br/>full-text search")]
+    RD[("Redis<br/>cache")]
+
+    U --> UI
+    UI -->|"REST + JWT"| API
+    API -->|"store / read data"| PG
+    API -->|"index & search text"| ES
+    API -->|"cache hot results"| RD
+
+    classDef store fill:#e0f2fe,stroke:#0369a1,color:#0c4a6e,font-size:18px;
+    classDef svc fill:#ccfbf1,stroke:#0f766e,color:#134e4a,font-size:18px;
+    classDef user fill:#fef9c3,stroke:#a16207,color:#713f12,font-size:18px;
+    class PG,ES,RD store;
+    class API,UI svc;
+    class U user;

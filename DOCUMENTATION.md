@@ -3,7 +3,7 @@
 **Designing a Scalable Knowledge Base System**
 System Design • Semester 4
 
-> Export this file (together with `docs/architecture.md`) to a single PDF for submission — see the command at the end.
+> This document is the source for the consolidated PDF `KnowledgeHub_Documentation.pdf` (build it with `python scripts/build_pdf.py`). A companion **Explanation Guide** (`KnowledgeHub_Explanation_Guide.pdf`) walks through every file and the system-design concepts in plain language.
 
 ---
 
@@ -95,23 +95,29 @@ A defining trait of the implementation is **graceful degradation**: each externa
 
 The platform is layered into **clients → gateway → stateless API services → data tier**. The editable Mermaid sources for every diagram below live in [`docs/diagrams/`](docs/diagrams/) and [`docs/architecture.md`](docs/architecture.md).
 
+**Simple overview (the big picture in one line)**
+
+![Simple architecture overview](docs/diagrams/00_architecture_simple.png)
+
+*Figure 1 — At its simplest: a user works in the **Web App**, which calls the **KnowledgeHub API** over REST (secured with JWT). The API uses three data stores — **PostgreSQL** as the system of record, **Elasticsearch** for fast full-text search, and **Redis** to cache hot results.*
+
 **Detailed system architecture**
 
 ![Detailed system architecture](docs/diagrams/01_architecture.png)
 
-*Figure 1 — Components, modules, and their interactions. The application tier is stateless and horizontally scaled; PostgreSQL is the system of record while Elasticsearch and Redis are independently scalable derived stores.*
+*Figure 2 — Components, modules, and their interactions. The application tier is stateless and horizontally scaled; PostgreSQL is the system of record while Elasticsearch and Redis are independently scalable derived stores.*
 
 **Write path (create / update a document)**
 
 ![Write path sequence](docs/diagrams/03_write_path.png)
 
-*Figure 2 — A document edit is committed to PostgreSQL (row + immutable version + audit log), then projected into the Elasticsearch index, and the affected caches are invalidated.*
+*Figure 3 — A document edit is committed to PostgreSQL (row + immutable version + audit log), then projected into the Elasticsearch index, and the affected caches are invalidated.*
 
 **Search path (query)**
 
 ![Search path sequence](docs/diagrams/04_search_path.png)
 
-*Figure 3 — Search first consults the per-user Redis cache; on a miss it resolves the caller's visible document IDs from the ACL, queries Elasticsearch filtered to those IDs, then caches the result.*
+*Figure 4 — Search first consults the per-user Redis cache; on a miss it resolves the caller's visible document IDs from the ACL, queries Elasticsearch filtered to those IDs, then caches the result.*
 
 **Component responsibilities**
 
@@ -155,7 +161,7 @@ We use a **relational schema (PostgreSQL)** as the system of record because docu
 
 ![Entity-Relationship diagram](docs/diagrams/02_er_diagram.png)
 
-*Figure 4 — Relational schema (PostgreSQL). `document_versions` is append-only for full revision history; `permissions` is the per-document ACL; `collaboration_logs` is the append-only audit trail.*
+*Figure 5 — Relational schema (PostgreSQL). `document_versions` is append-only for full revision history; `permissions` is the per-document ACL; `collaboration_logs` is the append-only audit trail.*
 
 ### 6.2 Tables & rationale
 
@@ -272,7 +278,8 @@ Query: 'production deployment'
 | **Inverted Index** | `app/services/inverted_index.py` | TF-IDF + cosine keyword search (Q5). |
 | **Document Service** | `app/services/document_service.py` | Versioning, index sync, cache invalidation, audit logging. |
 | **API Routers** | `app/routers/*.py` | HTTP endpoints for auth, documents, search, collaboration. |
-| **App entrypoint** | `app/main.py` | Wires routers, creates tables, exposes `/health`. |
+| **App entrypoint** | `app/main.py` | Wires routers, mounts the Web UI, creates tables, exposes `/health`. |
+| **Web UI (frontend)** | `app/static/index.html` | Single-page app (login, create, search, view, comment) served at `/app`. |
 | **Demo & tests** | `notebooks/demo.ipynb`, `smoke_test.py` | Executable demonstration and end-to-end verification. |
 
 ---
@@ -281,6 +288,7 @@ Query: 'production deployment'
 
 | Layer | Technology | Why |
 |---|---|---|
+| Frontend | **Vanilla HTML/CSS/JS** (single-page) | Zero-build UI served by the API; talks to REST endpoints with JWT. |
 | API framework | **FastAPI** (Python) | Async, type-safe, auto-generated OpenAPI/Swagger docs. |
 | Server | **Uvicorn** | High-performance ASGI server. |
 | ORM | **SQLAlchemy 2.0** | Mature, DB-agnostic (Postgres in prod, SQLite for demo). |
@@ -308,23 +316,47 @@ Query: 'production deployment'
 
 All screenshots were captured from the **live dockerized stack** (PostgreSQL + Elasticsearch + Redis).
 
+### Web application (the user-facing UI)
+
+The single-page Web App is served by the API at `http://localhost:8001/app`.
+
+**Sign-in screen**
+
+![Web app login screen](docs/screenshots/05_ui_login.png)
+
+*Figure 6 — Login / registration (OAuth2 password flow → JWT).*
+
+**Dashboard — create & search**
+
+![Web app dashboard with search results](docs/screenshots/06_ui_dashboard.png)
+
+*Figure 7 — Creating and searching documents. Results show the live Elasticsearch BM25 score, matched-term highlights, query latency, and whether the result came from the Redis cache. The badge confirms `search: elasticsearch`.*
+
+**Document view — content, version history & comments**
+
+![Web app document view](docs/screenshots/07_ui_document.png)
+
+*Figure 8 — Opening a document shows its content, tags, full revision history (v2, v1), and the collaboration comment thread.*
+
+### API & infrastructure
+
 **Interactive API documentation (Swagger UI)** — `http://localhost:8001/docs`
 
 ![Swagger UI showing all endpoints](docs/screenshots/01_swagger_ui.png)
 
-*Figure 5 — Auto-generated OpenAPI documentation listing every endpoint grouped by module (auth, documents, collaboration, search, system).*
+*Figure 9 — Auto-generated OpenAPI documentation listing every endpoint grouped by module (auth, documents, collaboration, search, system).*
 
 **Health check — active backends** — `http://localhost:8001/health`
 
 ![Health endpoint reporting elasticsearch and Redis](docs/screenshots/03_health.png)
 
-*Figure 6 — The running platform reports `search_backend: elasticsearch` and `cache_backend: Redis`, confirming the full distributed stack is active.*
+*Figure 10 — The running platform reports `search_backend: elasticsearch` and `cache_backend: Redis`, confirming the full distributed stack is active.*
 
 **End-to-end run on the real stack**
 
 ![End-to-end demo transcript](docs/screenshots/04_e2e_demo.png)
 
-*Figure 7 — A complete run (`scripts/demo_transcript.py`): registration + JWT, document creation with Elasticsearch indexing, versioning, `403 → 200` permission enforcement, BM25 search with highlights, permission-filtered results, Redis cache hit, and the collaboration activity feed.*
+*Figure 11 — A complete run (`scripts/demo_transcript.py`): registration + JWT, document creation with Elasticsearch indexing, versioning, `403 → 200` permission enforcement, BM25 search with highlights, permission-filtered results, Redis cache hit, and the collaboration activity feed.*
 
 ---
 

@@ -1,21 +1,26 @@
 """
-Build the single consolidated project PDF from DOCUMENTATION.md.
+Build a project PDF from a Markdown source.
 
 Pipeline:  Markdown --(python-markdown)--> styled HTML --(headless Chrome)--> PDF
 
-Usage:  python scripts/build_pdf.py
-Output: KnowledgeHub_Documentation.pdf  (repo root)
+Usage:
+    python scripts/build_pdf.py                       # builds both project PDFs
+    python scripts/build_pdf.py DOCUMENTATION.md out.pdf   # build one explicitly
 """
 import pathlib
 import subprocess
+import sys
 
 import markdown
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-SRC = ROOT / "DOCUMENTATION.md"
-HTML_OUT = ROOT / "docs" / "_documentation_build.html"
-PDF_OUT = ROOT / "KnowledgeHub_Documentation.pdf"
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+
+# (markdown source, output PDF) pairs built when no CLI args are given.
+DEFAULT_TARGETS = [
+    ("DOCUMENTATION.md", "KnowledgeHub_Documentation.pdf"),
+    ("EXPLANATION_GUIDE.md", "KnowledgeHub_Explanation_Guide.pdf"),
+]
 
 CSS = """
 @page { size: A4; margin: 18mm 16mm; }
@@ -68,5 +73,17 @@ def main() -> None:
     print(f"PDF written:  {PDF_OUT}  ({PDF_OUT.stat().st_size // 1024} KB)")
 
 
-if __name__ == "__main__":
+def build(src_name: str, pdf_name: str) -> None:
+    global SRC, HTML_OUT, PDF_OUT
+    SRC = ROOT / src_name
+    HTML_OUT = ROOT / "docs" / ("_build_" + pathlib.Path(src_name).stem + ".html")
+    PDF_OUT = ROOT / pdf_name
     main()
+
+
+if __name__ == "__main__":
+    if len(sys.argv) == 3:
+        build(sys.argv[1], sys.argv[2])
+    else:
+        for src_name, pdf_name in DEFAULT_TARGETS:
+            build(src_name, pdf_name)

@@ -12,6 +12,7 @@ KnowledgeHub is a distributed knowledge base that lets organizations create, org
 
 | Capability | How it's delivered |
 |---|---|
+| **Web UI** | Single-page app (login, create, search, view, version history, comments) served by the API at `/app`. |
 | **Document management** | Create / read / update / delete articles, organised into team *spaces*, with tags. |
 | **Versioning** | Every content change writes an immutable `DocumentVersion` — full revision history. |
 | **Full-text search** | Elasticsearch index with TF-IDF/BM25 ranking; pure-Python inverted index as an offline fallback. |
@@ -28,13 +29,15 @@ The system is built with **FastAPI + SQLAlchemy + PostgreSQL + Elasticsearch + R
 
 ## Architecture
 
-See [`docs/architecture.md`](docs/architecture.md) for the full diagram set (component, write-path, and search-path). High-level flow:
+![Simple architecture overview](docs/diagrams/00_architecture_simple.png)
+
+See [`docs/architecture.md`](docs/architecture.md) and [`docs/diagrams/`](docs/diagrams/) for the full diagram set (simple, detailed component, write-path, search-path, ER). High-level flow:
 
 ```
-Web / Mobile  ->  Load Balancer  ->  KnowledgeHub API (stateless, N replicas)
-                                       |  Auth · Documents · Search · Collaboration · Indexing
-                                       |
-                 PostgreSQL (truth) · Elasticsearch (search) · Redis (cache) · S3 (blobs)
+Browser → Web App (/app) → KnowledgeHub API (stateless, N replicas)
+                             |  Auth · Documents · Search · Collaboration · Indexing
+                             |
+           PostgreSQL (truth) · Elasticsearch (search) · Redis (cache) · S3 (blobs)
 ```
 
 ---
@@ -53,6 +56,7 @@ knowledgehub/
 │   ├── cache.py               # Redis cache w/ in-memory fallback
 │   ├── search.py              # Elasticsearch engine w/ inverted-index fallback
 │   ├── routers/               # auth, documents, search, collaboration endpoints
+│   ├── static/index.html      # single-page Web UI (served at /app)
 │   └── services/
 │       ├── inverted_index.py  # Q5: TF-IDF + cosine keyword search (stdlib only)
 │       └── document_service.py# versioning + index sync + cache invalidation
@@ -70,7 +74,9 @@ knowledgehub/
 ├── requirements.txt
 ├── .env.example
 ├── DOCUMENTATION.md           # consolidated project report (source for the PDF)
-└── KnowledgeHub_Documentation.pdf   # the single consolidated deliverable PDF
+├── EXPLANATION_GUIDE.md       # plain-language walkthrough (files, architecture, viva Q&A)
+├── KnowledgeHub_Documentation.pdf        # the single consolidated deliverable PDF
+└── KnowledgeHub_Explanation_Guide.pdf    # companion explanation/presentation PDF
 ```
 
 ---
@@ -109,7 +115,10 @@ Start the API:
 uvicorn app.main:app --reload
 ```
 
-Open the interactive API docs at **http://localhost:8000/docs** and `GET /health` to see which backends are active.
+Then open:
+- **Web app:** http://localhost:8000/app
+- **Interactive API docs (Swagger):** http://localhost:8000/docs
+- **Backend status:** http://localhost:8000/health
 
 ### Option B — Full distributed stack (Docker Compose)
 
@@ -118,7 +127,7 @@ cp .env.example .env                 # adjust secrets if you like
 docker compose up --build
 ```
 
-This starts PostgreSQL, Elasticsearch, Redis and the API together. The API waits for the data services to be healthy, then serves on **http://localhost:8001**.
+This starts PostgreSQL, Elasticsearch, Redis and the API together. The API waits for the data services to be healthy, then serves the **web app at http://localhost:8001/app** (Swagger at `/docs`).
 
 > **Host ports (compose):** to avoid clashing with other local services, the stack publishes on non-default host ports — API `8001`, Postgres `5433`, Elasticsearch `9201`, Redis `6380`. Container-internal ports are unchanged, so the services still talk to each other on `5432/9200/6379` over the Docker network. With the stack up, `GET http://localhost:8001/health` reports `"search_backend": "elasticsearch"` and `"cache_backend": "Redis"`. Swap `8000` → `8001` in the curl examples below when using Docker.
 
