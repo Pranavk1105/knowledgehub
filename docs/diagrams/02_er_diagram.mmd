@@ -1,0 +1,63 @@
+erDiagram
+    USER ||--o{ DOCUMENT : owns
+    USER ||--o{ PERMISSION : "is granted"
+    SPACE ||--o{ DOCUMENT : contains
+    DOCUMENT ||--o{ DOCUMENT_VERSION : "has history"
+    DOCUMENT ||--o{ PERMISSION : "access via"
+    DOCUMENT ||--o{ COMMENT : has
+    DOCUMENT ||--o{ COLLABORATION_LOG : records
+
+    USER {
+        string id PK
+        string email UK
+        string full_name
+        string hashed_password
+        enum   role "admin|editor|viewer"
+        datetime created_at
+    }
+    SPACE {
+        string id PK
+        string name
+        string description
+    }
+    DOCUMENT {
+        string id PK
+        string title
+        text   content
+        string space_id FK
+        string owner_id FK
+        int    current_version
+        string tags
+        datetime created_at
+        datetime updated_at
+    }
+    DOCUMENT_VERSION {
+        string id PK
+        string document_id FK
+        int    version
+        string title
+        text   content
+        string edited_by FK
+        datetime created_at
+    }
+    PERMISSION {
+        string id PK
+        string document_id FK
+        string user_id FK
+        enum   level "owner|editor|viewer"
+    }
+    COMMENT {
+        string id PK
+        string document_id FK
+        string author_id FK
+        text   body
+        datetime created_at
+    }
+    COLLABORATION_LOG {
+        string id PK
+        string document_id FK
+        string user_id FK
+        string action
+        text   detail
+        datetime created_at
+    }

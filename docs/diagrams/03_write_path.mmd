@@ -1,0 +1,18 @@
+sequenceDiagram
+    autonumber
+    participant C as Client
+    participant API as Document Service
+    participant PG as PostgreSQL
+    participant IDX as Indexing Pipeline
+    participant ES as Elasticsearch
+    participant R as Redis
+
+    C->>API: PUT /documents/{id} (+ JWT)
+    API->>API: authorize (>= editor on doc)
+    API->>PG: UPDATE document + INSERT DocumentVersion
+    API->>PG: INSERT CollaborationLog (audit)
+    PG-->>API: committed (strong consistency)
+    API->>IDX: sync(document)
+    IDX->>ES: upsert into inverted index
+    API->>R: invalidate doc + search caches
+    API-->>C: 200 OK (new version number)

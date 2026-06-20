@@ -1,0 +1,55 @@
+flowchart TB
+    subgraph CLIENTS["Client Layer"]
+        WEB["Web App<br/>(SPA)"]
+        MOB["Mobile App"]
+    end
+
+    GW["API Gateway / Load Balancer<br/>TLS termination · rate limiting · routing · JWT pass-through"]
+
+    subgraph API["Application Tier — stateless FastAPI (N replicas, auto-scaled)"]
+        direction TB
+        AUTH["Auth Module<br/>register · login (JWT)<br/>RBAC + per-doc ACL"]
+        DOCS["Document Service<br/>CRUD · versioning<br/>cache invalidation"]
+        SEARCHSVC["Search Service<br/>visible-id resolution<br/>query · result cache"]
+        COLLAB["Collaboration Service<br/>comments · activity feed"]
+        IDX["Indexing Pipeline<br/>project doc changes -> index"]
+    end
+
+    subgraph DATA["Data Tier"]
+        direction TB
+        PG[("PostgreSQL — system of record<br/>users · spaces · documents<br/>document_versions · permissions<br/>comments · collaboration_logs")]
+        ES[("Elasticsearch<br/>full-text inverted index<br/>BM25 ranking · sharded · replicated")]
+        REDIS[("Redis<br/>read cache · per-user search cache")]
+        OBJ[("Object Storage (S3)<br/>attachments / blobs")]
+    end
+
+    BK["Backups & Snapshots<br/>Postgres PITR · ES snapshots"]
+
+    WEB --> GW
+    MOB --> GW
+    GW --> AUTH
+    GW --> DOCS
+    GW --> SEARCHSVC
+    GW --> COLLAB
+
+    AUTH -->|"read/write users, ACLs"| PG
+    DOCS -->|"docs + immutable versions"| PG
+    DOCS -->|"sync on create/update/delete"| IDX
+    DOCS -->|"large blobs"| OBJ
+    DOCS -->|"invalidate doc/search cache"| REDIS
+    IDX -->|"upsert / delete"| ES
+    COLLAB -->|"comments + audit log"| PG
+
+    SEARCHSVC -->|"resolve visible doc ids (ACL)"| PG
+    SEARCHSVC -->|"query, filtered by visible ids"| ES
+    SEARCHSVC -->|"cache lookup / store (TTL)"| REDIS
+
+    PG -.->|"streaming replication"| BK
+    ES -.->|"snapshot"| BK
+
+    classDef store fill:#e3f2fd,stroke:#1565c0,color:#0d47a1;
+    classDef svc fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20;
+    classDef edge fill:#fff3e0,stroke:#e65100,color:#e65100;
+    class PG,ES,REDIS,OBJ store;
+    class AUTH,DOCS,SEARCHSVC,COLLAB,IDX svc;
+    class GW,WEB,MOB edge;

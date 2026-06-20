@@ -1,0 +1,20 @@
+sequenceDiagram
+    autonumber
+    participant C as Client
+    participant S as Search Service
+    participant R as Redis
+    participant PG as PostgreSQL
+    participant ES as Elasticsearch
+
+    C->>S: GET /search?q=... (+ JWT)
+    S->>R: lookup per-user cached result
+    alt cache hit
+        R-->>S: cached hits
+        S-->>C: results (cached=true, ~0 ms)
+    else cache miss
+        S->>PG: resolve visible document ids (ACL)
+        S->>ES: query, filtered by visible ids (BM25)
+        ES-->>S: ranked hits + highlights
+        S->>R: store result with TTL
+        S-->>C: results (cached=false)
+    end

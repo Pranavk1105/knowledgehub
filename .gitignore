@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Databases / local artifacts
+*.db
+*.sqlite3
+notebooks/demo_nb.db
+notebooks/.ipynb_checkpoints/
+
+# Build intermediates (the final PDF IS committed; this is just the HTML step)
+docs/_documentation_build.html
+
+# Env
+.env
+
+# OS
+.DS_Store
