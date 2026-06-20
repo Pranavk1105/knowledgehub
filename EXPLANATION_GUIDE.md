@@ -79,6 +79,17 @@ This "use the right tool for each job" approach is called **polyglot persistence
 **One more pattern worth naming: CQRS-lite (Command Query Responsibility Segregation).**
 Writes go to PostgreSQL (the command side / source of truth). Reads for search go to Elasticsearch (the query side / optimised read model). The two are kept in sync by the indexing step. We don't implement full CQRS, but the *idea* — separate the write model from the read model — is exactly what we do.
 
+> ### 💡 Why a *stateless* API matters for KnowledgeHub
+>
+> Our API is **stateless** — it keeps no memory of users between requests. Each request carries its own proof of identity (a **JWT token**), so the server verifies who you are without storing any session. Why this is a big deal for *this* project:
+>
+> - **Scales to millions of concurrent users (Q6).** Because every API copy is interchangeable, we simply **run more copies** behind the load balancer when traffic grows — horizontal scaling. A stateful design couldn't do this cleanly.
+> - **Fault tolerant (Q6).** If one API copy crashes, **nobody is logged out and no work is lost** — the user's token still works and the load balancer routes their next request to a healthy copy. (A stateful server would lose every session in its memory.)
+> - **Zero-downtime deploys.** We can replace API copies one at a time during an update; users never notice, because any copy can serve any request.
+> - **Clean separation = safe restarts.** All real state lives in **PostgreSQL, Elasticsearch and Redis**, not in the API. That's literally why our `kh-api` container can be rebuilt or scaled freely without losing a single document — the API is disposable, the data stores are durable.
+>
+> **One-liner:** *"A stateless API lets me run many interchangeable copies behind a load balancer, so KnowledgeHub scales to millions of users, survives a server crash without logging anyone out, and redeploys with zero downtime — because all the real state lives in Postgres, Elasticsearch, and Redis."*
+
 ---
 
 ## 4. The technology choices, in plain words
