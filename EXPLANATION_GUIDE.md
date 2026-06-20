@@ -107,6 +107,52 @@ Writes go to PostgreSQL (the command side / source of truth). Reads for search g
 
 **A nice touch — graceful fallbacks.** If Elasticsearch, Redis, or Postgres aren't running, the app automatically falls back to a **pure-Python search index**, an **in-memory cache**, and **SQLite**. So it runs anywhere, even with zero infrastructure — great for grading. `GET /health` tells you which backends are live.
 
+### 4.1 Every dependency in `requirements.txt`, explained
+
+These are the exact Python libraries the project installs (`pip install -r requirements.txt`). Grouped by job:
+
+**Serve HTTP (handle requests)**
+| Library | What it does in this project |
+|---|---|
+| `fastapi` | The **web framework** — defines endpoints, validates input, auto-generates the Swagger docs. |
+| `uvicorn[standard]` | The **server** that actually runs FastAPI and listens on a port. `[standard]` adds performance extras. |
+| `python-multipart` | Lets FastAPI read **form data** — needed because OAuth2 login sends `username`/`password` as a form. |
+
+**Database (PostgreSQL)**
+| Library | What it does |
+|---|---|
+| `sqlalchemy` | The **ORM** — define tables as Python classes (`models.py`) and query in Python. |
+| `psycopg2-binary` | The **PostgreSQL driver** — the actual connector SQLAlchemy uses to talk to Postgres. |
+| `alembic` | **Database migrations** — versioned schema changes (production-grade way to evolve tables). |
+
+**Validation & configuration**
+| Library | What it does |
+|---|---|
+| `pydantic` | **Data validation** from type hints — powers the request/response schemas. |
+| `pydantic-settings` | Loads **config** from environment / `.env` (`config.py`). |
+| `email-validator` | Makes Pydantic's `EmailStr` actually validate email addresses. |
+
+**Security**
+| Library | What it does |
+|---|---|
+| `python-jose[cryptography]` | Creates and verifies **JWT tokens** (`auth.py`). |
+| `bcrypt` | **Hashes passwords** so they're never stored in plain text. |
+
+**Search & cache clients**
+| Library | What it does |
+|---|---|
+| `elasticsearch` | The **client** the app uses to index and search documents in Elasticsearch. |
+| `redis` | The **client** the app uses to read/write the cache in Redis. |
+
+**Testing & demo**
+| Library | What it does |
+|---|---|
+| `httpx` | HTTP client used by FastAPI's `TestClient` in `smoke_test.py`. |
+| `requests` | Simple HTTP client used by the demo scripts to call the running server. |
+| `jupyter` | Runs the demo notebook (`notebooks/demo.ipynb`). |
+
+> **Pattern to notice (good viva point):** several entries come in a **"framework + driver/server"** pair — `sqlalchemy` + `psycopg2` (ORM + DB driver) and `fastapi` + `uvicorn` (app + server). The framework is the generic, easy-to-use layer; the driver/server is the concrete component that does the real I/O.
+
 ---
 
 ## 5. File-by-file: why each file exists
