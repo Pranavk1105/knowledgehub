@@ -4,7 +4,7 @@
 
 KnowledgeHub is a distributed knowledge base that lets organizations create, organize, search, and share technical documents, policies, FAQs and project documentation across teams — with full-text search, document versioning, real-time-friendly collaboration, and secure per-document access control.
 
-> **Repository:** _replace this line with your GitHub URL after pushing, e.g._ `https://github.com/<your-username>/knowledgehub`
+> **Repository:** https://github.com/Pranavk1105/knowledgehub
 
 ---
 
