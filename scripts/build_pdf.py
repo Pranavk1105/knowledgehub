@@ -20,6 +20,7 @@ CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 DEFAULT_TARGETS = [
     ("DOCUMENTATION.md", "KnowledgeHub_Documentation.pdf"),
     ("EXPLANATION_GUIDE.md", "KnowledgeHub_Explanation_Guide.pdf"),
+    ("CODE_WALKTHROUGH.md", "KnowledgeHub_Code_Walkthrough.pdf"),
 ]
 
 CSS = """

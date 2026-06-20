@@ -5,7 +5,7 @@ System Design • Semester 4
 
 > This guide explains, in simple words but with real technical depth, **what we built, why each file exists, which architecture we follow, and how the system answers the standard system-design questions**. It is meant to be read top-to-bottom before a presentation or viva.
 >
-> Companion document: `KnowledgeHub_Documentation.pdf` (the formal report). This guide is the "explain it to me like I'm presenting it" version.
+> Companion documents: `KnowledgeHub_Documentation.pdf` (the formal report) and `KnowledgeHub_Code_Walkthrough.pdf` (a **line-by-line explanation of every file** — what each import is and where it comes from). This guide is the "explain it to me like I'm presenting it" version.
 
 ---
 

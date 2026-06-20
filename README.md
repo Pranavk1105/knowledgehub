@@ -74,9 +74,11 @@ knowledgehub/
 ├── requirements.txt
 ├── .env.example
 ├── DOCUMENTATION.md           # consolidated project report (source for the PDF)
-├── EXPLANATION_GUIDE.md       # plain-language walkthrough (files, architecture, viva Q&A)
+├── EXPLANATION_GUIDE.md       # plain-language walkthrough (architecture, viva Q&A)
+├── CODE_WALKTHROUGH.md        # line-by-line explanation of every file + imports
 ├── KnowledgeHub_Documentation.pdf        # the single consolidated deliverable PDF
-└── KnowledgeHub_Explanation_Guide.pdf    # companion explanation/presentation PDF
+├── KnowledgeHub_Explanation_Guide.pdf    # companion explanation/presentation PDF
+└── KnowledgeHub_Code_Walkthrough.pdf     # line-by-line code reference PDF
 ```
 
 ---

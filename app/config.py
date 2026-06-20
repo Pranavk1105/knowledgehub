@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
 
-    # SQLite fallback keeps the app runnable without any external service.
+
     database_url: str = "sqlite:///./knowledgehub.db"
 
     elasticsearch_url: str = "http://localhost:9200"
